@@ -1,17 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ADA_SYSTEM_PROMPT } from '../utils/adaPrompt';
-import MessageBubble from './MessageBubble';
-import TypingIndicator from './TypingIndicator';
+import React, { useState, useRef, useEffect } from "react";
+import { ADA_SYSTEM_PROMPT } from "../utils/adaPrompt";
+import MessageBubble from "./MessageBubble";
+import TypingIndicator from "./TypingIndicator";
 
 function ChatWindow({ messages, setMessages }) {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
   const sendMessage = async () => {
@@ -19,56 +19,47 @@ function ChatWindow({ messages, setMessages }) {
     if (!text || loading) return;
 
     setError(null);
-    const userMessage = { role: 'user', content: text };
+    const userMessage = { role: "user", content: text };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    setInput('');
+    setInput("");
     setLoading(true);
 
     try {
-      const apiKey = process.env.REACT_APP_ANTHROPIC_API_KEY;
-
-      if (!apiKey || apiKey === 'your_api_key_here') {
-        throw new Error('API key not configured. Please add your Anthropic API key to the .env file.');
-      }
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
+      // Calls our local backend server — no browser API key needed
+      const response = await fetch("http://localhost:3001/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1024,
-          system: ADA_SYSTEM_PROMPT,
+          systemPrompt: ADA_SYSTEM_PROMPT,
           messages: updatedMessages.map((m) => ({
             role: m.role,
-            content: m.content
-          }))
-        })
+            content: m.content,
+          })),
+        }),
       });
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData?.error?.message || `Request failed with status ${response.status}`);
+        throw new Error(
+          errData?.error || `Server returned status ${response.status}`,
+        );
       }
 
       const data = await response.json();
-      const reply = data.content?.[0]?.text || "I am sorry, something went wrong. Please try again.";
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+      const reply =
+        data.reply || "I am sorry, something went wrong. Please try again.";
+      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
-      console.error('Ada API error:', err);
+      console.error("Ada API error:", err);
       setError(err.message);
       setMessages((prev) => [
         ...prev,
         {
-          role: 'assistant',
+          role: "assistant",
           content:
-            "I am having some trouble connecting right now. Please check your internet connection and try again. You are not alone — I will be right here when you come back."
-        }
+            "I am having some trouble connecting right now. Please check your internet connection and try again. You are not alone — I will be right here when you come back.",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -77,7 +68,7 @@ function ChatWindow({ messages, setMessages }) {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -85,7 +76,12 @@ function ChatWindow({ messages, setMessages }) {
 
   return (
     <main className="chat-container">
-      <div className="messages-area" role="log" aria-label="Conversation with Ada" aria-live="polite">
+      <div
+        className="messages-area"
+        role="log"
+        aria-label="Conversation with Ada"
+        aria-live="polite"
+      >
         {messages.map((msg, i) => (
           <MessageBubble key={i} role={msg.role} content={msg.content} />
         ))}

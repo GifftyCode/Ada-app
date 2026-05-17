@@ -12,81 +12,96 @@ stigma, and the specific stressors that Nigerian students face.
 
 ## HOW TO SET UP AND RUN ADA ON YOUR COMPUTER
 
-Follow these steps exactly, one at a time.
+Ada now has two parts running at the same time:
+  - The BACKEND SERVER (server.js) — talks to the Anthropic API safely
+  - The REACT APP (npm start)     — the chat interface your users see
+
+You need TWO terminal windows open. Follow every step carefully.
 
 ---
 
-### STEP 1 — Make sure Node.js is installed
-You said you already have Node.js. To confirm, open a terminal and type:
+### STEP 1 — Confirm Node.js is installed
+Open a terminal and type:
   node --version
-You should see a version number like v18.x.x or higher. If not, download it from nodejs.org.
+
+You should see something like v18.x.x or higher.
+If not, download Node.js from: https://nodejs.org
 
 ---
 
-### STEP 2 — Open this project in VS Code
-1. Unzip the ada-app folder (if it came as a zip)
+### STEP 2 — Open the project in VS Code
+1. Unzip the ada-app folder
 2. Open VS Code
-3. Go to File → Open Folder → select the ada-app folder
+3. File → Open Folder → select the ada-app folder
 
 ---
 
-### STEP 3 — Install the project dependencies
-In VS Code, open the Terminal (View → Terminal) and type:
+### STEP 3 — Install all dependencies
+In the VS Code terminal, type:
   npm install
 
-This downloads React and all the packages Ada needs. It may take 1–2 minutes.
-You will see a node_modules folder appear when it is done.
+This installs React AND the backend packages (express, cors, dotenv).
+Wait for it to finish — a node_modules folder will appear.
 
 ---
 
 ### STEP 4 — Add your Anthropic API key
-1. In the ada-app folder, find the file called .env.example
+1. Find the file called  .env.example  in the ada-app folder
 2. Make a copy of it and rename the copy to exactly:  .env
-   (just .env — no .example, no .txt)
-3. Open the .env file
-4. Replace the text  your_api_key_here  with your actual Anthropic API key
+   (just .env with nothing else — no .example, no .txt after it)
+3. Open the .env file in VS Code
+4. Replace  your_api_key_here  with your actual Anthropic API key
+
+Your .env file should look exactly like this when done:
+  ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxx
 
 To get your API key:
-  - Go to https://console.anthropic.com
-  - Sign up or log in
-  - Click "API Keys" in the left menu
-  - Click "Create Key"
-  - Copy the key and paste it into your .env file
+  → Go to https://console.anthropic.com
+  → Sign in → API Keys → Create Key → Copy it
 
-Your .env file should look like this when done:
-  REACT_APP_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxx
-
-IMPORTANT: Never share your .env file or commit it to GitHub.
-The .env file is private — it stays on your computer only.
+IMPORTANT: Never share your .env file with anyone.
 
 ---
 
-### STEP 5 — Start Ada
+### STEP 5 — Start the backend server (Terminal 1)
 In the VS Code terminal, type:
+  node server.js
+
+You should see:
+   Ada server running at http://localhost:3001
+   Health check: http://localhost:3001/health
+
+Leave this terminal running. Do NOT close it.
+
+---
+
+### STEP 6 — Start the React app (Terminal 2)
+Open a SECOND terminal in VS Code:
+  → Click the + icon at the top right of the terminal panel
+
+In the new terminal, type:
   npm start
 
-After about 30 seconds, your browser will automatically open at:
+Your browser will open automatically at:
   http://localhost:3000
 
-Ada will be running. Select a mood and start talking to her.
+Select a mood and talk to Ada. She will respond through the server.
 
 ---
 
-### STEP 6 — Deploy Ada online (so your survey users can access her)
-When you are ready to share Ada with Nigerian students for your user testing:
+### WHAT TO DO IF ADA STILL CANNOT CONNECT
+1. Make sure BOTH terminals are running (server.js AND npm start)
+2. Check your .env file — the key must say ANTHROPIC_API_KEY= (not REACT_APP_)
+3. Visit http://localhost:3001/health in your browser — it should say "Ada server is running"
+4. If it does not, your server is not started — go back to Step 5
 
-1. Go to https://vercel.com and sign up with your GitHub account
-2. Push your ada-app folder to a GitHub repository
-3. In Vercel, click "Add New Project" and select your repository
-4. In the Environment Variables section, add:
-   Name:  REACT_APP_ANTHROPIC_API_KEY
-   Value: (your API key)
-5. Click Deploy
+---
 
-Vercel will give you a free public URL like:
-  https://ada-mental-health.vercel.app
-
-Share that link with your survey participants.
+### STEP 7 — Deploy Ada online for your user testing
+When you are ready to share Ada with Nigerian students:
+We will handle deployment to Vercel together at that stage of the project.
+The deployment process for a backend + frontend app is slightly different
+and we will walk through it step by step when the time comes.
 
 ---
 
