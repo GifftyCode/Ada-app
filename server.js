@@ -5,87 +5,103 @@
 //  Reads ANTHROPIC_API_KEY from your .env file.
 // ─────────────────────────────────────────────────────────────────────────────
 
-require('dotenv').config();
-const http = require('http');
+require("dotenv").config();
+const http = require("http");
 
 const PORT = 3001;
 
 const server = http.createServer(async (req, res) => {
   // CORS headers — allow React dev server to call this
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     res.writeHead(204);
     return res.end();
   }
 
   // Health check
-  if (req.url === '/health' && req.method === 'GET') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ status: 'Ada server is running' }));
+  if (req.url === "/health" && req.method === "GET") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ status: "Ada server is running" }));
   }
 
   // Chat endpoint
-  if (req.url === '/api/chat' && req.method === 'POST') {
-    let body = '';
+  if (req.url === "/api/chat" && req.method === "POST") {
+    let body = "";
 
-    req.on('data', (chunk) => { body += chunk.toString(); });
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
 
-    req.on('end', async () => {
+    req.on("end", async () => {
       try {
         const { messages, systemPrompt } = JSON.parse(body);
 
         if (!messages || !Array.isArray(messages)) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({ error: 'A valid messages array is required.' }));
+          res.writeHead(400, { "Content-Type": "application/json" });
+          return res.end(
+            JSON.stringify({ error: "A valid messages array is required." }),
+          );
         }
 
-        const apiKey = process.env.ANTHROPIC_API_KEY;
+        const apiKey = process.env.GROQ_API_KEY;
 
-        if (!apiKey || apiKey === 'your_api_key_here') {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({
-            error: 'API key not configured. Add ANTHROPIC_API_KEY to your .env file.'
-          }));
+        if (!apiKey || apiKey === "your_groq_key_here") {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          return res.end(
+            JSON.stringify({
+              error:
+                "API key not configured. Add GROQ_API_KEY to your .env file.",
+            }),
+          );
         }
 
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01'
+        const response = await fetch(
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model: "llama-3.3-70b-versatile",
+              max_tokens: 1024,
+              messages: [
+                { role: "system", content: systemPrompt },
+                ...messages,
+              ],
+            }),
           },
-          body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 1024,
-            system: systemPrompt,
-            messages: messages
-          })
-        });
+        );
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          res.writeHead(response.status, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({
-            error: errorData?.error?.message || 'Anthropic API error'
-          }));
+          res.writeHead(response.status, {
+            "Content-Type": "application/json",
+          });
+          return res.end(
+            JSON.stringify({
+              error: errorData?.error?.message || "Anthropic API error",
+            }),
+          );
         }
 
         const data = await response.json();
         const reply =
-          data.content?.[0]?.text ||
-          'I am sorry, I could not generate a response. Please try again.';
+          data.choices?.[0]?.message?.content ||
+          "I am sorry, I could not generate a response. Please try again.";
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.writeHead(200, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ reply }));
-
       } catch (err) {
-        console.error('Server error:', err.message);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ error: 'Server error: ' + err.message }));
+        console.error("Server error:", err.message);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        return res.end(
+          JSON.stringify({ error: "Server error: " + err.message }),
+        );
       }
     });
 
@@ -93,13 +109,13 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 404 for anything else
-  res.writeHead(404, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: 'Not found' }));
+  res.writeHead(404, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ error: "Not found" }));
 });
 
 server.listen(PORT, () => {
-  console.log('\n✓ Ada server running at http://localhost:' + PORT);
-  console.log('✓ Health check: http://localhost:' + PORT + '/health');
-  console.log('✓ Chat endpoint: http://localhost:' + PORT + '/api/chat');
-  console.log('\nWaiting for messages from the React app...\n');
+  console.log("\n✓ Ada server running at http://localhost:" + PORT);
+  console.log("✓ Health check: http://localhost:" + PORT + "/health");
+  console.log("✓ Chat endpoint: http://localhost:" + PORT + "/api/chat");
+  console.log("\nWaiting for messages from the React app...\n");
 });
