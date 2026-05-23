@@ -5,37 +5,37 @@ const moods = [
     key: 'great',
     emoji: '😊',
     label: 'Great',
-    opening: "That is wonderful to hear! Sometimes it helps to talk even when things are going well — there is no wrong time to check in with yourself. What is on your mind today?"
+    opening: "That is wonderful. Sometimes it helps to talk even when things are going well — there is no wrong time to check in with yourself. What is on your mind today?"
   },
   {
     key: 'okay',
     emoji: '😐',
     label: 'Okay',
-    opening: "'Okay' can mean many things. Sometimes it means we are carrying something quietly and just managing. I am here, no rush at all. How are you really doing?"
+    opening: "'Okay' can mean many things. Sometimes it means we are carrying something quietly and just managing. I am here, no rush at all — how are you really doing?"
   },
   {
     key: 'stressed',
     emoji: '😰',
     label: 'Stressed',
-    opening: "Stress is heavy, and I am glad you came here instead of carrying it alone. You do not have to figure everything out right now. What has been weighing on you most?"
+    opening: "I see you are carrying some stress today. That is okay — you do not have to manage it alone. What has been going on for you?"
   },
   {
     key: 'sad',
     emoji: '😔',
     label: 'Sad',
-    opening: "I am sorry you are feeling sad today. That takes honesty to admit, and I respect that. No judgment here — just tell me what has been going on for you."
+    opening: "Sadness is heavy. I am glad you came here. No rush, no judgment — just tell me what is on your mind."
   },
   {
     key: 'anxious',
     emoji: '😟',
     label: 'Anxious',
-    opening: "Anxiety can feel like your mind is running faster than you can keep up with. I see you, and I am right here. Take a breath — we can talk through this together. What is making you feel anxious?"
+    opening: "Anxiety can feel like your thoughts are running faster than you can keep up. I am right here with you. What has been making you feel anxious?"
   },
   {
     key: 'overwhelmed',
     emoji: '😩',
     label: 'Overwhelmed',
-    opening: "When everything feels like too much at once, it helps to just pause and talk it out with someone. I am right here with you. Where would you like to start?"
+    opening: "When everything feels like too much at once, sometimes all we need is to pause and talk it through. I am right here. Where would you like to start?"
   },
 ];
 
@@ -43,12 +43,14 @@ function MoodCheck({ onSelect }) {
   return (
     <main className="mood-screen">
       <div className="mood-card">
+
         <div className="ada-avatar-large" aria-hidden="true">A</div>
-        <h1 className="mood-title">Hello, I am Ada</h1>
+
+        <h1 className="mood-title">How are you feeling?</h1>
         <p className="mood-subtitle">
-          A safe space to talk — no judgment, no pressure, no cost.<br />
-          How are you feeling right now?
+          Choose what feels closest to where you are right now. There is no wrong answer.
         </p>
+
         <div className="mood-grid" role="group" aria-label="Select your current mood">
           {moods.map((m) => (
             <button
@@ -62,9 +64,11 @@ function MoodCheck({ onSelect }) {
             </button>
           ))}
         </div>
+
         <p className="mood-privacy">
-          🔒 Everything you share with Ada is private and not stored.
+          🔒 Private · Not stored · Starts fresh each session
         </p>
+
       </div>
     </main>
   );

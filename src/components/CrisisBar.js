@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 
 function CrisisBar() {
   const [visible, setVisible] = useState(true);
-
   if (!visible) return null;
 
   return (
@@ -15,7 +14,7 @@ function CrisisBar() {
       <button
         className="crisis-close"
         onClick={() => setVisible(false)}
-        aria-label="Dismiss crisis resources bar"
+        aria-label="Dismiss crisis resources"
       >
         ✕
       </button>

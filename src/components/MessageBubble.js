@@ -10,7 +10,6 @@ function MessageBubble({ role, content }) {
       )}
       <div
         className={`bubble ${isAda ? 'bubble--ada' : 'bubble--user'}`}
-        role={isAda ? 'article' : undefined}
         aria-label={isAda ? 'Ada says' : 'You said'}
       >
         {content.split('\n').map((line, i, arr) => (

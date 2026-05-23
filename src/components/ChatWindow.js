@@ -1,65 +1,87 @@
-import React, { useState, useRef, useEffect } from "react";
-import { ADA_SYSTEM_PROMPT } from "../utils/adaPrompt";
-import MessageBubble from "./MessageBubble";
-import TypingIndicator from "./TypingIndicator";
+import React, { useState, useRef, useEffect } from 'react';
+import { ADA_SYSTEM_PROMPT } from '../utils/adaPrompt';
+import MessageBubble from './MessageBubble';
+import TypingIndicator from './TypingIndicator';
+import FeedbackPrompt from './FeedbackPrompt';
 
-function ChatWindow({ messages, setMessages }) {
-  const [input, setInput] = useState("");
+// Points to Vercel serverless function in production,
+// or to local server.js in development
+const API_URL =
+  process.env.NODE_ENV === 'production'
+    ? '/api/chat'
+    : 'http://localhost:3001/api/chat';
+
+function ChatWindow({ messages, setMessages, onResources }) {
+  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackDone, setFeedbackDone] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
+  // Count only user messages for feedback trigger
+  const userMessageCount = messages.filter((m) => m.role === 'user').length;
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  // Show feedback prompt after 6 user messages, once only
+  useEffect(() => {
+    if (userMessageCount >= 6 && !feedbackDone && !showFeedback) {
+      setShowFeedback(true);
+    }
+  }, [userMessageCount, feedbackDone, showFeedback]);
 
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || loading) return;
 
     setError(null);
-    const userMessage = { role: "user", content: text };
+    setShowFeedback(false);
+
+    const userMessage = { role: 'user', content: text };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    setInput("");
+    setInput('');
     setLoading(true);
 
     try {
-      // Calls our local backend server — no browser API key needed
-      const response = await fetch("http://localhost:3001/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           systemPrompt: ADA_SYSTEM_PROMPT,
           messages: updatedMessages.map((m) => ({
             role: m.role,
-            content: m.content,
-          })),
-        }),
+            content: m.content
+          }))
+        })
       });
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(
-          errData?.error || `Server returned status ${response.status}`,
-        );
+        throw new Error(errData?.error || `Server returned status ${response.status}`);
       }
 
       const data = await response.json();
       const reply =
-        data.reply || "I am sorry, something went wrong. Please try again.";
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+        data.reply ||
+        'I am sorry, something went wrong. Please try again.';
+
+      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+
     } catch (err) {
-      console.error("Ada API error:", err);
+      console.error('Ada error:', err);
       setError(err.message);
       setMessages((prev) => [
         ...prev,
         {
-          role: "assistant",
+          role: 'assistant',
           content:
-            "I am having some trouble connecting right now. Please check your internet connection and try again. You are not alone — I will be right here when you come back.",
-        },
+            'I am having some trouble connecting right now. Please check your internet connection and try again. You are not alone — I will be right here when you come back.'
+        }
       ]);
     } finally {
       setLoading(false);
@@ -68,10 +90,15 @@ function ChatWindow({ messages, setMessages }) {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleFeedbackDone = () => {
+    setShowFeedback(false);
+    setFeedbackDone(true);
   };
 
   return (
@@ -85,35 +112,46 @@ function ChatWindow({ messages, setMessages }) {
         {messages.map((msg, i) => (
           <MessageBubble key={i} role={msg.role} content={msg.content} />
         ))}
+
         {loading && <TypingIndicator />}
-        {error && (
-          <div className="error-notice" role="alert">
-            {error}
-          </div>
+
+        {showFeedback && !loading && (
+          <FeedbackPrompt onDone={handleFeedbackDone} />
         )}
+
+        {error && (
+          <div className="error-notice" role="alert">{error}</div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
       <div className="input-area">
-        <textarea
-          ref={inputRef}
-          className="chat-input"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Talk to Ada… (Enter to send, Shift+Enter for new line)"
-          rows={2}
-          disabled={loading}
-          aria-label="Type your message to Ada"
-        />
-        <button
-          className="send-btn"
-          onClick={sendMessage}
-          disabled={loading || !input.trim()}
-          aria-label="Send message"
-        >
-          Send
-        </button>
+        <div className="input-row">
+          <textarea
+            ref={inputRef}
+            className="chat-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Talk to Ada…"
+            rows={1}
+            disabled={loading}
+            aria-label="Type your message to Ada"
+          />
+          <button
+            className="send-btn"
+            onClick={sendMessage}
+            disabled={loading || !input.trim()}
+            aria-label="Send message"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
+        </div>
+        <p className="input-hint">Enter to send · Shift+Enter for new line</p>
       </div>
     </main>
   );
