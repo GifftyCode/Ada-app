@@ -1,32 +1,30 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 function ParticipantScreen({ onContinue }) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
 
   const handleSubmit = () => {
-    const id = name.trim() || "Anonymous";
-    onContinue(id);
+    const trimmed = name.trim();
+    onContinue(trimmed);
   };
 
   const handleKey = (e) => {
-    if (e.key === "Enter") handleSubmit();
+    if (e.key === 'Enter') handleSubmit();
   };
 
   return (
     <main className="participant-screen">
       <div className="participant-card">
-        <div className="participant-icon" aria-hidden="true">
-          👋
-        </div>
+        <span className="participant-icon" aria-hidden="true">👋</span>
         <h2 className="participant-title">Before we begin</h2>
         <p className="participant-sub">
-          Enter your first name or a nickname so Ada can address you personally.
-          This is only used within your session — nothing is stored.
+          What would you like Ada to call you? You can use your first name,
+          a nickname, or leave it blank — whatever feels comfortable.
         </p>
         <input
           className="participant-input"
           type="text"
-          placeholder="e.g. Tunde, Amaka, or just Anonymous"
+          placeholder="e.g. Tunde, Amaka, or just leave blank"
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKey}
@@ -35,10 +33,10 @@ function ParticipantScreen({ onContinue }) {
           aria-label="Enter your name or nickname"
         />
         <button className="about-btn" onClick={handleSubmit}>
-          Continue to Ada →
+          Continue →
         </button>
         <p className="participant-note">
-          You can also leave this blank and tap Continue.
+          You can leave this blank and tap Continue.
         </p>
       </div>
     </main>

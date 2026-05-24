@@ -14,8 +14,6 @@ function FeedbackPrompt({ onDone }) {
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = () => {
-    // In a real deployment, this would POST to a feedback endpoint
-    // For now, we log it — in Chapter 4 we will wire this to a Google Sheet
     console.log('Ada feedback:', { rating: selected, comment });
     setSubmitted(true);
     setTimeout(onDone, 1800);
@@ -34,7 +32,6 @@ function FeedbackPrompt({ onDone }) {
     <div className="feedback-card">
       <p className="feedback-heading">How is Ada doing so far?</p>
       <p className="feedback-sub">Your honest feedback helps make Ada better for other students.</p>
-
       <div className="feedback-ratings">
         {ratings.map((r) => (
           <button
@@ -49,7 +46,6 @@ function FeedbackPrompt({ onDone }) {
           </button>
         ))}
       </div>
-
       <textarea
         className="feedback-comment"
         placeholder="Any other thoughts? (optional)"
@@ -57,18 +53,11 @@ function FeedbackPrompt({ onDone }) {
         onChange={(e) => setComment(e.target.value)}
         rows={2}
       />
-
       <div className="feedback-actions">
-        <button
-          className="feedback-submit"
-          onClick={handleSubmit}
-          disabled={!selected}
-        >
+        <button className="feedback-submit" onClick={handleSubmit} disabled={!selected}>
           Submit feedback
         </button>
-        <button className="feedback-skip" onClick={onDone}>
-          Skip
-        </button>
+        <button className="feedback-skip" onClick={onDone}>Skip</button>
       </div>
     </div>
   );

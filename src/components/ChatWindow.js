@@ -1,17 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ADA_SYSTEM_PROMPT } from '../utils/adaPrompt';
+import { getAdaSystemPrompt } from '../utils/adaPrompt';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 import FeedbackPrompt from './FeedbackPrompt';
 
-// Points to Vercel serverless function in production,
-// or to local server.js in development
 const API_URL =
   process.env.NODE_ENV === 'production'
     ? '/api/chat'
     : 'http://localhost:3001/api/chat';
 
-function ChatWindow({ messages, setMessages, onResources }) {
+function ChatWindow({ messages, setMessages, participantName, onResources }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -20,14 +18,12 @@ function ChatWindow({ messages, setMessages, onResources }) {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Count only user messages for feedback trigger
   const userMessageCount = messages.filter((m) => m.role === 'user').length;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // Show feedback prompt after 6 user messages, once only
   useEffect(() => {
     if (userMessageCount >= 6 && !feedbackDone && !showFeedback) {
       setShowFeedback(true);
@@ -52,7 +48,7 @@ function ChatWindow({ messages, setMessages, onResources }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemPrompt: ADA_SYSTEM_PROMPT,
+          systemPrompt: getAdaSystemPrompt(participantName),
           messages: updatedMessages.map((m) => ({
             role: m.role,
             content: m.content
@@ -66,10 +62,7 @@ function ChatWindow({ messages, setMessages, onResources }) {
       }
 
       const data = await response.json();
-      const reply =
-        data.reply ||
-        'I am sorry, something went wrong. Please try again.';
-
+      const reply = data.reply || 'I am sorry, something went wrong. Please try again.';
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
 
     } catch (err) {
@@ -145,7 +138,8 @@ function ChatWindow({ messages, setMessages, onResources }) {
             disabled={loading || !input.trim()}
             aria-label="Send message"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>

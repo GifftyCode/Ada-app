@@ -1,75 +1,77 @@
-import React, { useState } from "react";
-import "./styles/App.css";
-import Header from "./components/Header";
-import CrisisBar from "./components/CrisisBar";
-import AboutScreen from "./components/AboutScreen";
-import MoodCheck from "./components/MoodCheck";
-import ChatWindow from "./components/ChatWindow";
-import ResourcesScreen from "./components/ResourcesScreen";
-import ParticipantScreen from "./components/ParticipantScreen";
+import React, { useState } from 'react';
+import './styles/App.css';
+import Header from './components/Header';
+import CrisisBar from './components/CrisisBar';
+import AboutScreen from './components/AboutScreen';
+import ParticipantScreen from './components/ParticipantScreen';
+import MoodCheck from './components/MoodCheck';
+import ChatWindow from './components/ChatWindow';
+import ResourcesScreen from './components/ResourcesScreen';
 
 function App() {
-  // screens: 'about' | 'mood' | 'chat' | 'resources'
-  const [screen, setScreen] = useState("about");
-  const [participantName, setParticipantName] = useState("");
+  const [screen, setScreen] = useState('about');
+  const [participantName, setParticipantName] = useState('');
   const [mood, setMood] = useState(null);
   const [messages, setMessages] = useState([]);
 
-  const handleAgree = () => setScreen("participant");
+  const handleAgree = () => setScreen('participant');
 
   const handleParticipantContinue = (name) => {
     setParticipantName(name);
-    setScreen("mood");
+    setScreen('mood');
   };
 
   const handleMoodSelect = (selectedMood, openingMessage) => {
     setMood(selectedMood);
-    setMessages([{ role: "assistant", content: openingMessage }]);
-    setScreen("chat");
+    setMessages([{ role: 'assistant', content: openingMessage }]);
+    setScreen('chat');
   };
 
   const handleRestart = () => {
     setMood(null);
     setMessages([]);
-    setScreen("mood");
+    setScreen('mood');
   };
 
-  const handleResources = () => setScreen("resources");
-  const handleBackFromResources = () => setScreen(mood ? "chat" : "mood");
+  const handleResources = () => setScreen('resources');
+  const handleBackFromResources = () => setScreen(mood ? 'chat' : 'mood');
 
   return (
     <div className="app-container">
       <Header
         screen={screen}
-        onRestart={screen === "chat" ? handleRestart : null}
+        onRestart={screen === 'chat' ? handleRestart : null}
         onResources={handleResources}
-        onBack={screen === "resources" ? handleBackFromResources : null}
+        onBack={screen === 'resources' ? handleBackFromResources : null}
       />
       <CrisisBar />
 
-      {screen === "about" && <AboutScreen onAgree={handleAgree} />}
+      {screen === 'about' && (
+        <AboutScreen onAgree={handleAgree} />
+      )}
 
-      {screen === "participant" && (
+      {screen === 'participant' && (
         <ParticipantScreen onContinue={handleParticipantContinue} />
       )}
 
-      {screen === "mood" && (
+      {screen === 'mood' && (
         <MoodCheck
           onSelect={handleMoodSelect}
           participantName={participantName}
         />
       )}
 
-      {screen === "chat" && (
+      {screen === 'chat' && (
         <ChatWindow
           messages={messages}
           setMessages={setMessages}
+          participantName={participantName}
           mood={mood}
           onResources={handleResources}
         />
       )}
 
-      {screen === "resources" && (
+      {screen === 'resources' && (
         <ResourcesScreen onBack={handleBackFromResources} />
       )}
     </div>

@@ -1,15 +1,19 @@
 import React from 'react';
+import AdaLogo from './AdaLogo';
 
 function AboutScreen({ onAgree }) {
   return (
     <main className="about-screen">
       <div className="about-card">
 
-        <div className="about-avatar" aria-hidden="true">A</div>
+        <div className="about-logo-wrap">
+          <AdaLogo size={88} showDot={true} />
+        </div>
 
         <h1 className="about-title">Meet <em>Ada</em></h1>
         <p className="about-tagline">
-          A culturally adapted AI mental health companion for Nigerian university students.
+          A culturally adapted AI mental health companion
+          for Nigerian university students.
         </p>
 
         <div className="about-divider" />
@@ -51,7 +55,8 @@ function AboutScreen({ onAgree }) {
         <div className="about-divider" />
 
         <p className="about-consent">
-          By continuing, you acknowledge that Ada is an AI companion and not a substitute for professional mental health support.
+          By continuing, you acknowledge that Ada is an AI companion
+          and not a substitute for professional mental health support.
         </p>
 
         <button className="about-btn" onClick={onAgree}>
