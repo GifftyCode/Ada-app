@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 function ParticipantScreen({ onContinue }) {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
 
   const handleSubmit = () => {
     const trimmed = name.trim();
@@ -9,17 +9,19 @@ function ParticipantScreen({ onContinue }) {
   };
 
   const handleKey = (e) => {
-    if (e.key === 'Enter') handleSubmit();
+    if (e.key === "Enter") handleSubmit();
   };
 
   return (
     <main className="participant-screen">
       <div className="participant-card">
-        <span className="participant-icon" aria-hidden="true">👋</span>
-        <h2 className="participant-title">Before we begin</h2>
+        <span className="participant-icon" aria-hidden="true">
+          👋
+        </span>
+        <h2 className="participant-title">AdaNne wants to know you</h2>
         <p className="participant-sub">
-          What would you like Ada to call you? You can use your first name,
-          a nickname, or leave it blank — whatever feels comfortable.
+          What would you like Ada to call you? You can use your first name, a
+          nickname, or leave it blank — whatever feels comfortable.
         </p>
         <input
           className="participant-input"
