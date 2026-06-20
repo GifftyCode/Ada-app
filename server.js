@@ -1,17 +1,50 @@
-// ──────────────────────────────────────────────────────────
-//  Ada — Local Development Server
-//  Run with: node server.js
-//  Uses Groq API (free) — get your key at console.groq.com
-//  Reads GROQ_API_KEY from your .env file
-// ──────────────────────────────────────────────────────────
-
 require("dotenv").config();
+require("dns").setDefaultResultOrder("ipv4first");
+
 const http = require("http");
+const https = require("https");
 
 const PORT = 3001;
 
+function callHuggingFace(payload, token) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(payload);
+    const options = {
+      hostname: "api-inference.huggingface.co",
+      path: "/models/Gifftybabe/ada-mental-health-nigerian",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "Content-Length": Buffer.byteLength(body),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = "";
+      res.on("data", (chunk) => {
+        data += chunk;
+      });
+      res.on("end", () => {
+        try {
+          resolve({ status: res.statusCode, data: JSON.parse(data) });
+        } catch (e) {
+          reject(new Error("Invalid JSON from HuggingFace: " + data));
+        }
+      });
+    });
+
+    req.on("error", (e) => reject(e));
+    req.write(body);
+    req.end();
+  });
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const server = http.createServer(async (req, res) => {
-  // CORS — allow React dev server and local phone testing
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -21,13 +54,11 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  // Health check
   if (req.url === "/health" && req.method === "GET") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ status: "Ada server is running" }));
+    return res.end(JSON.stringify({ status: "AdaNne server is running" }));
   }
 
-  // Chat endpoint
   if (req.url === "/api/chat" && req.method === "POST") {
     let body = "";
     req.on("data", (chunk) => {
@@ -44,58 +75,60 @@ const server = http.createServer(async (req, res) => {
           );
         }
 
-        const apiKey = process.env.GROQ_API_KEY;
+        const HF_TOKEN = process.env.HF_TOKEN;
 
-        if (!apiKey || apiKey === "your_groq_key_here") {
+        if (!HF_TOKEN) {
           res.writeHead(500, { "Content-Type": "application/json" });
           return res.end(
-            JSON.stringify({
-              error:
-                "API key not configured. Add GROQ_API_KEY to your .env file. Get a free key at console.groq.com",
-            }),
+            JSON.stringify({ error: "HF_TOKEN not configured in .env file." }),
           );
         }
 
-        const response = await fetch(
-          "https://api-inference.huggingface.co/models/Gifftybabe/ada-mental-health-nigerian",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.HF_TOKEN}`,
-            },
-            body: JSON.stringify({
-              inputs: `Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\n\n### Instruction:\n${systemPrompt}\n\n### Input:\n${messages[messages.length - 1].content}\n\n### Response:`,
-              parameters: {
-                max_new_tokens: 300,
-                temperature: 0.7,
-                top_p: 0.9,
-                repetition_penalty: 1.1,
-                return_full_text: false,
-              },
-            }),
+        const payload = {
+          inputs: `Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\n\n### Instruction:\n${systemPrompt}\n\n### Input:\n${messages[messages.length - 1].content}\n\n### Response:`,
+          parameters: {
+            max_new_tokens: 300,
+            temperature: 0.7,
+            top_p: 0.9,
+            repetition_penalty: 1.1,
+            return_full_text: false,
           },
-        );
+        };
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          res.writeHead(response.status, {
-            "Content-Type": "application/json",
-          });
-          return res.end(
-            JSON.stringify({
-              error:
-                errorData?.error ||
-                "Could not reach AdaNne model. Please try again.",
-            }),
-          );
+        let reply = null;
+
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          console.log(`Attempt ${attempt} — calling HuggingFace...`);
+
+          const result = await callHuggingFace(payload, HF_TOKEN);
+          console.log("Status:", result.status);
+          console.log("Response:", JSON.stringify(result.data).slice(0, 300));
+
+          const data = result.data;
+
+          if (data.error && data.error.toLowerCase().includes("loading")) {
+            console.log("Model is loading — waiting 20 seconds...");
+            await sleep(20000);
+            continue;
+          }
+
+          if (result.status !== 200) {
+            throw new Error(
+              data.error || `HuggingFace returned status ${result.status}`,
+            );
+          }
+
+          reply = Array.isArray(data)
+            ? data[0]?.generated_text?.trim()
+            : data?.generated_text?.trim();
+
+          if (reply) break;
         }
 
-        const data = await response.json();
-        const reply = Array.isArray(data)
-          ? data[0]?.generated_text?.trim()
-          : data?.generated_text?.trim() ||
-            "I am sorry, I could not generate a response right now. Please try again.";
+        if (!reply) {
+          reply =
+            "I am sorry, I could not generate a response right now. Please try again in a moment.";
+        }
 
         res.writeHead(200, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ reply }));
@@ -110,13 +143,12 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 404
   res.writeHead(404, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ error: "Not found" }));
 });
 
 server.listen(PORT, () => {
-  console.log("\n✓ Ada server running at http://localhost:" + PORT);
+  console.log("\n✓ AdaNne server running at http://localhost:" + PORT);
   console.log("✓ Health check: http://localhost:" + PORT + "/health");
   console.log("✓ Chat endpoint: http://localhost:" + PORT + "/api/chat");
   console.log("\nWaiting for messages...\n");
