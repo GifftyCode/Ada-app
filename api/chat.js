@@ -1,7 +1,7 @@
 // ──────────────────────────────────────────────────────────
 //  Ada — Vercel Serverless Function
 //  Lives at /api/chat in production
-//  Uses Groq API (free) — set GROQ_API_KEY in Vercel env vars
+// //  Uses your fine-tuned HuggingFace model — set HF_TOKEN in Vercel env vars
 // ──────────────────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
@@ -25,12 +25,12 @@ module.exports = async function handler(req, res) {
       .json({ error: "A valid messages array is required." });
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const HF_TOKEN = process.env.HF_TOKEN;
 
-  if (!apiKey) {
+  if (!HF_TOKEN) {
     return res.status(500).json({
       error:
-        "Server configuration error: GROQ_API_KEY not set in environment variables.",
+        "Server configuration error: HF_TOKEN not set in environment variables.",
     });
   }
 
