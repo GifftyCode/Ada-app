@@ -1,9 +1,3 @@
-// ──────────────────────────────────────────────────────────
-//  Ada — Vercel Serverless Function
-//  Lives at /api/chat in production
-// //  Uses your fine-tuned HuggingFace model — set HF_TOKEN in Vercel env vars
-// ──────────────────────────────────────────────────────────
-
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -25,61 +19,69 @@ module.exports = async function handler(req, res) {
       .json({ error: "A valid messages array is required." });
   }
 
-  const HF_TOKEN = process.env.HF_TOKEN;
-
-  if (!HF_TOKEN) {
-    return res.status(500).json({
-      error:
-        "Server configuration error: HF_TOKEN not set in environment variables.",
-    });
-  }
+  const userMessage = messages[messages.length - 1].content;
+  const SPACE_BASE = "https://gifftybabe-adanne-api.hf.space";
 
   try {
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/Gifftybabe/ada-mental-health-nigerian",
+    // Step 1: Submit the job to the Gradio queue
+    const submitResponse = await fetch(`${SPACE_BASE}/call/generate_response`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        data: [systemPrompt, userMessage],
+      }),
+    });
+
+    if (!submitResponse.ok) {
+      const errorText = await submitResponse.text();
+      console.error("Space submit error:", errorText);
+      return res.status(submitResponse.status).json({
+        error: "Could not reach AdaNne model. Please try again.",
+      });
+    }
+
+    const submitResult = await submitResponse.json();
+    const eventId = submitResult.event_id;
+
+    if (!eventId) {
+      return res
+        .status(500)
+        .json({ error: "No event ID returned from AdaNne model." });
+    }
+
+    // Step 2: Poll for the result using the event_id
+    const resultResponse = await fetch(
+      `${SPACE_BASE}/call/generate_response/${eventId}`,
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.HF_TOKEN}`,
-        },
-        body: JSON.stringify({
-          inputs: `Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\n\n### Instruction:\n${systemPrompt}\n\n### Input:\n${messages[messages.length - 1].content}\n\n### Response:`,
-          parameters: {
-            max_new_tokens: 300,
-            temperature: 0.7,
-            top_p: 0.9,
-            repetition_penalty: 1.1,
-            return_full_text: false,
-          },
-        }),
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
       },
     );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      res.writeHead(response.status, { "Content-Type": "application/json" });
-      return res.end(
-        JSON.stringify({
-          error:
-            errorData?.error ||
-            "Could not reach AdaNne model. Please try again.",
-        }),
-      );
-    }
+    const resultText = await resultResponse.text();
 
-    const data = await response.json();
-    const reply = Array.isArray(data)
-      ? data[0]?.generated_text?.trim()
-      : data?.generated_text?.trim() ||
-        "I am sorry, I could not generate a response right now. Please try again.";
+    // Gradio streams results as Server-Sent Events - parse the final data line
+    const lines = resultText
+      .split("\n")
+      .filter((line) => line.startsWith("data:"));
+    const lastDataLine = lines[lines.length - 1];
+    const parsedData = JSON.parse(lastDataLine.replace("data:", "").trim());
+
+    const reply = Array.isArray(parsedData) ? parsedData[0]?.trim() : null;
+
+    if (!reply) {
+      return res
+        .status(500)
+        .json({
+          error: "AdaNne did not return a valid response. Please try again.",
+        });
+    }
 
     return res.status(200).json({ reply });
   } catch (err) {
     console.error("Serverless function error:", err.message);
     return res.status(500).json({
-      error:
-        "A server error occurred. Please check your connection and try again.",
+      error: "Server error: " + err.message,
     });
   }
 };
