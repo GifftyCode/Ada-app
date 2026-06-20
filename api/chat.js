@@ -23,25 +23,37 @@ module.exports = async function handler(req, res) {
   const SPACE_BASE = "https://gifftybabe-adanne-api.hf.space";
 
   try {
-    // Step 1: Submit the job to the Gradio queue
-    const submitResponse = await fetch(`${SPACE_BASE}/call/generate_response`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        data: [systemPrompt, userMessage],
-      }),
-    });
+    // Step 1: Submit the job — note the /gradio_api/call/v2/ path and named keys
+    const submitResponse = await fetch(
+      `${SPACE_BASE}/gradio_api/call/v2/generate_response`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_prompt: systemPrompt,
+          user_message: userMessage,
+        }),
+      },
+    );
+
+    const submitText = await submitResponse.text();
+    console.log("Submit response:", submitText);
 
     if (!submitResponse.ok) {
-      const errorText = await submitResponse.text();
-      console.error("Space submit error:", errorText);
+      console.error("Space submit error:", submitText);
       return res.status(submitResponse.status).json({
         error: "Could not reach AdaNne model. Please try again.",
       });
     }
 
-    const submitResult = await submitResponse.json();
-    const eventId = submitResult.event_id;
+    let eventId;
+    try {
+      const submitJson = JSON.parse(submitText);
+      eventId = submitJson.event_id;
+    } catch (e) {
+      // Sometimes the event_id comes back as plain quoted text
+      eventId = submitText.replace(/"/g, "").trim();
+    }
 
     if (!eventId) {
       return res
@@ -49,9 +61,9 @@ module.exports = async function handler(req, res) {
         .json({ error: "No event ID returned from AdaNne model." });
     }
 
-    // Step 2: Poll for the result using the event_id
+    // Step 2: Poll for the result using event_id — note plural endpoint without v2 here
     const resultResponse = await fetch(
-      `${SPACE_BASE}/call/generate_response/${eventId}`,
+      `${SPACE_BASE}/gradio_api/call/generate_response/${eventId}`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -59,14 +71,22 @@ module.exports = async function handler(req, res) {
     );
 
     const resultText = await resultResponse.text();
+    console.log("Result response:", resultText);
 
-    // Gradio streams results as Server-Sent Events - parse the final data line
     const lines = resultText
       .split("\n")
       .filter((line) => line.startsWith("data:"));
     const lastDataLine = lines[lines.length - 1];
-    const parsedData = JSON.parse(lastDataLine.replace("data:", "").trim());
 
+    if (!lastDataLine) {
+      return res
+        .status(500)
+        .json({
+          error: "AdaNne did not return a valid response. Please try again.",
+        });
+    }
+
+    const parsedData = JSON.parse(lastDataLine.replace("data:", "").trim());
     const reply = Array.isArray(parsedData) ? parsedData[0]?.trim() : null;
 
     if (!reply) {
