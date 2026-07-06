@@ -5,7 +5,16 @@
   ],
   "functions": {
     "api/chat.js": {
-      "maxDuration": 60
+      "maxDuration": 300
+    },
+    "api/keepalive.js": {
+      "maxDuration": 10
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/keepalive",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }

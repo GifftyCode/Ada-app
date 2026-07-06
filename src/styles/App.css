@@ -1084,3 +1084,12 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+.loading-note {
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-top: 6px;
+  font-style: italic;
+  animation: fadeUp 0.5s ease both;
+}

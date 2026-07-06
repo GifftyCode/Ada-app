@@ -1,16 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { getAdaSystemPrompt } from '../utils/adaPrompt';
-import MessageBubble from './MessageBubble';
-import TypingIndicator from './TypingIndicator';
-import FeedbackPrompt from './FeedbackPrompt';
+import React, { useState, useRef, useEffect } from "react";
+import { getAdaSystemPrompt } from "../utils/adaPrompt";
+import MessageBubble from "./MessageBubble";
+import TypingIndicator from "./TypingIndicator";
+import FeedbackPrompt from "./FeedbackPrompt";
 
 const API_URL =
-  process.env.NODE_ENV === 'production'
-    ? '/api/chat'
-    : 'http://localhost:3001/api/chat';
+  process.env.NODE_ENV === "production"
+    ? "/api/chat"
+    : "http://localhost:3001/api/chat";
 
 function ChatWindow({ messages, setMessages, participantName, onResources }) {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -18,10 +18,10 @@ function ChatWindow({ messages, setMessages, participantName, onResources }) {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  const userMessageCount = messages.filter((m) => m.role === 'user').length;
+  const userMessageCount = messages.filter((m) => m.role === "user").length;
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
   useEffect(() => {
@@ -37,44 +37,46 @@ function ChatWindow({ messages, setMessages, participantName, onResources }) {
     setError(null);
     setShowFeedback(false);
 
-    const userMessage = { role: 'user', content: text };
+    const userMessage = { role: "user", content: text };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    setInput('');
+    setInput("");
     setLoading(true);
 
     try {
       const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           systemPrompt: getAdaSystemPrompt(participantName),
           messages: updatedMessages.map((m) => ({
             role: m.role,
-            content: m.content
-          }))
-        })
+            content: m.content,
+          })),
+        }),
       });
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData?.error || `Server returned status ${response.status}`);
+        throw new Error(
+          errData?.error || `Server returned status ${response.status}`,
+        );
       }
 
       const data = await response.json();
-      const reply = data.reply || 'I am sorry, something went wrong. Please try again.';
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
-
+      const reply =
+        data.reply || "I am sorry, something went wrong. Please try again.";
+      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
-      console.error('Ada error:', err);
+      console.error("Ada error:", err);
       setError(err.message);
       setMessages((prev) => [
         ...prev,
         {
-          role: 'assistant',
+          role: "assistant",
           content:
-            'I am having some trouble connecting right now. Please check your internet connection and try again. You are not alone — I will be right here when you come back.'
-        }
+            "I am having some trouble connecting right now. Please check your internet connection and try again. You are not alone — I will be right here when you come back.",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -83,7 +85,7 @@ function ChatWindow({ messages, setMessages, participantName, onResources }) {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -106,14 +108,23 @@ function ChatWindow({ messages, setMessages, participantName, onResources }) {
           <MessageBubble key={i} role={msg.role} content={msg.content} />
         ))}
 
-        {loading && <TypingIndicator />}
+        {loading && (
+          <div>
+            <TypingIndicator />
+            <p className="loading-note">
+              AdaNne is thinking... this may take up to a minute
+            </p>
+          </div>
+        )}
 
         {showFeedback && !loading && (
           <FeedbackPrompt onDone={handleFeedbackDone} />
         )}
 
         {error && (
-          <div className="error-notice" role="alert">{error}</div>
+          <div className="error-notice" role="alert">
+            {error}
+          </div>
         )}
 
         <div ref={bottomRef} />
@@ -138,8 +149,14 @@ function ChatWindow({ messages, setMessages, participantName, onResources }) {
             disabled={loading || !input.trim()}
             aria-label="Send message"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
