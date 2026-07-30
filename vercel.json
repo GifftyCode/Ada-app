@@ -5,7 +5,7 @@
   ],
   "functions": {
     "api/chat.js": {
-      "maxDuration": 300
+      "maxDuration": 60
     },
     "api/keepalive.js": {
       "maxDuration": 10
