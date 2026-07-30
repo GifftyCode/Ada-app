@@ -23,15 +23,14 @@ module.exports = async function handler(req, res) {
   const SPACE_BASE = "https://gifftybabe-adanne-api.hf.space";
 
   try {
-    // Step 1: Submit the job — note the /gradio_api/call/v2/ path and named keys
+    // Step 1: Submit the job
     const submitResponse = await fetch(
-      `${SPACE_BASE}/gradio_api/call/v2/generate_response`,
+      `${SPACE_BASE}/gradio_api/call/generate_response`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          system_prompt: systemPrompt,
-          user_message: userMessage,
+          data: [systemPrompt, userMessage],
         }),
       },
     );
@@ -79,22 +78,18 @@ module.exports = async function handler(req, res) {
     const lastDataLine = lines[lines.length - 1];
 
     if (!lastDataLine) {
-      return res
-        .status(500)
-        .json({
-          error: "AdaNne did not return a valid response. Please try again.",
-        });
+      return res.status(500).json({
+        error: "AdaNne did not return a valid response. Please try again.",
+      });
     }
 
     const parsedData = JSON.parse(lastDataLine.replace("data:", "").trim());
     const reply = Array.isArray(parsedData) ? parsedData[0]?.trim() : null;
 
     if (!reply) {
-      return res
-        .status(500)
-        .json({
-          error: "AdaNne did not return a valid response. Please try again.",
-        });
+      return res.status(500).json({
+        error: "AdaNne did not return a valid response. Please try again.",
+      });
     }
 
     return res.status(200).json({ reply });
