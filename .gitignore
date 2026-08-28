@@ -17,3 +17,5 @@ Thumbs.db
 # Editor
 .vscode/
 *.swp
+local-server/
+*.save
