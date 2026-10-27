@@ -1,20 +1,18 @@
-import React, { useState } from 'react';
+import React from "react";
+import { CRISIS_LINE, EMERGENCY, MANI } from "../config/crisisResources";
 
+// Always visible on every screen; intentionally cannot be dismissed.
 function CrisisBar() {
-  const [visible, setVisible] = useState(true);
-  if (!visible) return null;
   return (
-    <div className="crisis-bar" role="alert">
+    <div className="crisis-bar" role="note" aria-label="Crisis resources">
       <span>
-        In crisis? Call NSPI: <strong>09080217555</strong>
+        In crisis? {CRISIS_LINE.short}:{" "}
+        <a href={`tel:${CRISIS_LINE.tel}`}><strong>{CRISIS_LINE.display}</strong></a>
+        &nbsp;·&nbsp;Emergency:{" "}
+        <a href={`tel:${EMERGENCY.tel}`}><strong>{EMERGENCY.display}</strong></a>
         &nbsp;·&nbsp;
-        Visit <strong>mani.ng</strong>
+        <a href={MANI.url} target="_blank" rel="noopener noreferrer"><strong>{MANI.display}</strong></a>
       </span>
-      <button
-        className="crisis-close"
-        onClick={() => setVisible(false)}
-        aria-label="Dismiss crisis resources"
-      >✕</button>
     </div>
   );
 }

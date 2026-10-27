@@ -3,6 +3,8 @@ import { getAdaSystemPrompt } from "../utils/adaPrompt";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import FeedbackPrompt from "./FeedbackPrompt";
+import CrisisCard from "./CrisisCard";
+import { detectCrisis } from "../utils/crisisDetect";
 
 const API_URL =
   process.env.NODE_ENV === "production"
@@ -39,7 +41,12 @@ function ChatWindow({ messages, setMessages, participantName, onResources }) {
 
     const userMessage = { role: "user", content: text };
     const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    // Model-independent safety net: show crisis resources instantly,
+    // before (and regardless of) the model's reply.
+    const crisisNotice = detectCrisis(text)
+      ? [{ role: "crisis", content: "" }]
+      : [];
+    setMessages([...updatedMessages, ...crisisNotice]);
     setInput("");
     setLoading(true);
 
@@ -49,10 +56,9 @@ function ChatWindow({ messages, setMessages, participantName, onResources }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           systemPrompt: getAdaSystemPrompt(participantName),
-          messages: updatedMessages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
+          messages: updatedMessages
+            .filter((m) => m.role === "user" || m.role === "assistant")
+            .map((m) => ({ role: m.role, content: m.content })),
         }),
       });
 
@@ -104,9 +110,13 @@ function ChatWindow({ messages, setMessages, participantName, onResources }) {
         aria-label="Conversation with Ada"
         aria-live="polite"
       >
-        {messages.map((msg, i) => (
-          <MessageBubble key={i} role={msg.role} content={msg.content} />
-        ))}
+        {messages.map((msg, i) =>
+          msg.role === "crisis" ? (
+            <CrisisCard key={i} />
+          ) : (
+            <MessageBubble key={i} role={msg.role} content={msg.content} />
+          ),
+        )}
 
         {loading && (
           <div>

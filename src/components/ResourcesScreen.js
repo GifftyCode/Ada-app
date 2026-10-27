@@ -4,8 +4,10 @@ const resources = [
   {
     category: 'Crisis Support', colour: 'red',
     items: [
-      { name: 'Nigeria Suicide Prevention Initiative (NSPI)', detail: 'Free, confidential crisis line available 24/7', contact: '09080217555', type: 'phone' },
-      { name: 'Mentally Aware Nigeria Initiative (MANI)', detail: 'Mental health support, resources, and community', contact: 'www.mani.ng', type: 'web' }
+      { name: 'Suicide Research and Prevention Initiative (SURPIN)', detail: 'Free, confidential suicide-prevention line, 24 hours', contact: '0800 078 7746', type: 'phone' },
+      { name: 'Mentally Aware Nigeria Initiative (MANI) helpline', detail: 'Mental health support by phone or SMS', contact: '0809 111 6264', type: 'phone' },
+      { name: 'Emergency services', detail: 'If you or someone else is in immediate danger', contact: '112', type: 'phone' },
+      { name: 'Mentally Aware Nigeria Initiative (MANI) website', detail: 'Mental health support, resources, and community', contact: 'www.mani.ng', type: 'web' }
     ]
   },
   {

@@ -1093,3 +1093,35 @@ body {
   font-style: italic;
   animation: fadeUp 0.5s ease both;
 }
+
+/* ─── Crisis bar links & instant crisis card (NSIC safety update) ─── */
+.crisis-bar a { color: inherit; text-decoration: none; }
+.crisis-bar a:hover { text-decoration: underline; }
+
+.crisis-card {
+  margin: 8px 0 12px 38px;
+  max-width: 86%;
+  background: var(--danger-light);
+  border: 1px solid rgba(192, 57, 43, 0.25);
+  border-radius: 14px;
+  padding: 12px 14px;
+  color: #3a1410;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.crisis-card p { margin: 0 0 8px; }
+.crisis-card-title { font-weight: 700; color: var(--danger); }
+.crisis-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
+.crisis-card-btn {
+  display: inline-block;
+  background: #fff;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.crisis-card-btn--urgent { background: var(--danger); color: #fff; }
+.crisis-card-small { font-size: 12.5px; opacity: 0.9; margin-bottom: 0 !important; }
+.crisis-card-small a { color: var(--danger); }

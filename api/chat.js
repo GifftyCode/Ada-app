@@ -1,3 +1,6 @@
+const { buildModelInput } = require("./_lib/buildInput");
+const { detectCrisis, SAFETY_LINE } = require("./_lib/crisisDetect");
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -19,7 +22,10 @@ module.exports = async function handler(req, res) {
       .json({ error: "A valid messages array is required." });
   }
 
-  const userMessage = messages[messages.length - 1].content;
+  const userMessage = buildModelInput(messages);
+  if (!userMessage) {
+    return res.status(400).json({ error: "No student message found." });
+  }
   const SPACE_BASE = "https://gifftybabe-adanne-api.hf.space";
 
   try {
@@ -36,10 +42,10 @@ module.exports = async function handler(req, res) {
     );
 
     const submitText = await submitResponse.text();
-    console.log("Submit response:", submitText);
 
     if (!submitResponse.ok) {
-      console.error("Space submit error:", submitText);
+      // Privacy: never log message or reply content.
+      console.error("Space submit error, status:", submitResponse.status);
       return res.status(submitResponse.status).json({
         error: "Could not reach AdaNne model. Please try again.",
       });
@@ -70,7 +76,6 @@ module.exports = async function handler(req, res) {
     );
 
     const resultText = await resultResponse.text();
-    console.log("Result response:", resultText);
 
     const lines = resultText
       .split("\n")
@@ -92,7 +97,14 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    return res.status(200).json({ reply });
+    // Deterministic safety net: the model's short replies often omit crisis
+    // contacts, so append them whenever the latest student message looks like
+    // a crisis (independent of what the model said).
+    const latest = messages.filter((m) => m && m.role === "user").pop();
+    const crisis = detectCrisis(latest && latest.content);
+    const finalReply = crisis ? `${reply}\n\n${SAFETY_LINE}` : reply;
+
+    return res.status(200).json({ reply: finalReply, crisis });
   } catch (err) {
     console.error("Serverless function error:", err.message);
     return res.status(500).json({

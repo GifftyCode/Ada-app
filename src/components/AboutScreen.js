@@ -37,8 +37,7 @@ function AboutScreen({ onAgree }) {
             <div>
               <strong>Private by design</strong>
               <p>
-                Your conversations are not stored or shared. Each session starts
-                fresh. Ada does not collect your name or personal information.
+                AdaNne does not save your conversation in any database, and it disappears when you close the page. Messages pass securely through our hosting providers to generate replies. Ada does not ask for personal details.
               </p>
             </div>
           </div>
@@ -50,7 +49,7 @@ function AboutScreen({ onAgree }) {
               <p>
                 Ada is a first-line support companion, not a therapist or
                 doctor. She does not diagnose conditions or prescribe treatment.
-                If you are in crisis, please call NSPI on 09080217555.
+                If you are in crisis, please call the SURPIN toll-free line on 0800 078 7746, MANI on 0809 111 6264, or 112 in an emergency. Ada cannot contact anyone on your behalf.
               </p>
             </div>
           </div>

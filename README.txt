@@ -1,88 +1,52 @@
 ═══════════════════════════════════════════════════════════
-  ADA — AI Mental Health Support Chatbot
-  MIVA Open University · MIT Research Project 2026
+  AdaNne — Culturally adapted AI mental health support
+  for Nigerian university students
+  Miva Open University · MIT Research Project 2026
+  Paper: NSIC 2026 (NSIC26P026)
 ═══════════════════════════════════════════════════════════
 
-WHAT IS ADA?
-Ada is a culturally adapted AI-powered mental health support
-companion for Nigerian university students. She understands
-Nigerian Pidgin, cultural pressures, and stigma around
-mental health — providing warm, judgment-free first-line
-support with crisis escalation to real help when needed.
+WHAT IT IS
+AdaNne is a NON-CLINICAL, first-line support chatbot. It does not
+diagnose, treat, provide therapy or act as an emergency service,
+and it cannot contact anyone on a student's behalf.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  RUNNING ADA LOCALLY
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ARCHITECTURE
+  React 18 front end (Vercel)  ->  /api/chat (Node.js serverless, Vercel)
+  ->  Gradio app on Hugging Face Space (gifftybabe-adanne-api)
+      running Llama 3.2 3B + AdaNne LoRA adapter.
 
-STEP 1 — Get a free Groq API key
-  Go to: https://console.groq.com
-  Sign up free (no card needed)
-  Click API Keys → Create Key → copy the key
+SAFETY AND PRIVACY DESIGN
+  - Crisis banner on every screen; cannot be dismissed
+    (SURPIN toll-free 0800 078 7746, emergency 112, mani.ng).
+    NOTE: 0908 021 7555, shown during the study, was found NOT IN SERVICE
+    in October 2026 and has been replaced.
+  - Instant crisis card: src/utils/crisisDetect.js checks each message
+    in the browser BEFORE the model is called and shows crisis contacts
+    immediately, even if the model is slow or down.
+  - System prompt (src/utils/adaPrompt.js) also instructs the model to
+    escalate, urge 112/hospital for imminent danger, never give methods,
+    and avoid pressuring phrases or ethnic generalisations.
+  - The model receives the latest student message plus up to three
+    earlier student messages (api/_lib/buildInput.js).
+  - No database, no analytics; message and reply text are NOT logged.
+    Hosting providers (Vercel, Hugging Face) may keep their own
+    request logs under their policies.
+  - All crisis contacts live in src/config/crisisResources.js.
+    Verify every number by phone before each release.
 
-STEP 2 — Add your API key
-  Copy .env.example and rename the copy to exactly:  .env
-  Open .env and replace  your_groq_key_here  with your key:
-    GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxx
+VERSION HISTORY
+  6c035ad (28 Aug 2026)  Version used in the user study
+                         (confirm against your deployment history).
+  nsic-safety-fixes      Post-study safety and privacy changes listed
+                         above. These were NOT part of the evaluated
+                         version and have not been user-tested.
 
-STEP 3 — Install dependencies (first time only)
-  In your terminal inside this folder:
-    npm install
+RUN LOCALLY
+  npm install
+  node server.js        (backend, http://localhost:3001)
+  npm start             (front end, http://localhost:3000)
+  npm test              (runs the crisis-detector tests)
 
-STEP 4 — Start the backend server  [Terminal 1]
-    node server.js
-  You should see:  ✓ Ada server running at http://localhost:3001
-  Leave this running. Do NOT close it.
-
-STEP 5 — Start the React app  [Terminal 2]
-  Open a second terminal (click + in VS Code terminal panel):
-    npm start
-  Browser opens at http://localhost:3000 — Ada is live.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  DEPLOYING TO VERCEL (live public URL)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. Push this project to a GitHub repository
-2. Go to vercel.com → Sign up with GitHub → Add New Project
-3. Select your ada-mental-health repository
-4. In Environment Variables, add:
-     Name:   GROQ_API_KEY
-     Value:  (your actual Groq key)
-5. Click Deploy
-
-Vercel gives you a live URL like:
-  https://ada-mental-health.vercel.app
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  PROJECT STRUCTURE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-ada-app/
-├── api/
-│   └── chat.js              Vercel serverless function (Groq)
-├── public/
-│   └── index.html           HTML shell
-├── src/
-│   ├── components/
-│   │   ├── AdaLogo.js       SVG logo (chat bubble + heart)
-│   │   ├── AboutScreen.js   Disclaimer + informed consent
-│   │   ├── ParticipantScreen.js  Name entry screen
-│   │   ├── MoodCheck.js     Mood selection screen
-│   │   ├── ChatWindow.js    Main conversation interface
-│   │   ├── FeedbackPrompt.js    Mid-session feedback widget
-│   │   ├── ResourcesScreen.js   Nigerian mental health resources
-│   │   ├── MessageBubble.js     Chat message display
-│   │   ├── TypingIndicator.js   Animated typing dots
-│   │   ├── Header.js        Navigation header with logo
-│   │   └── CrisisBar.js     Crisis helpline banner
-│   ├── utils/
-│   │   └── adaPrompt.js     Ada's cultural system prompt function
-│   ├── styles/
-│   │   └── App.css          All styling
-│   ├── App.js               Screen controller
-│   └── index.js             Entry point
-├── .env.example             API key template
-├── .gitignore               Keeps .env out of GitHub
-├── server.js                Local development server
-├── vercel.json              Vercel deployment config
-└── package.json             Project configuration
+DEPLOY
+  Push to the GitHub repository connected to Vercel; Vercel rebuilds
+  automatically.
